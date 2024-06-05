@@ -63,13 +63,12 @@ train_transform = transforms.Compose([
     transforms.Lambda(lambda x: add_random_mask(Image.fromarray((x.permute(1, 2, 0).numpy() * 255).astype(np.uint8)),
                                                 mask_size=(50, 50), p=0.5)),         #实现随机去除
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.4848, 0.4435, 0.4023], std=[0.2744, 0.2688, 0.2757]),
+    transforms.Normalize(mean=[0.4848, 0.4435, 0.4023], std=[0.2744, 0.2688, 0.2757]),          #实现归一化
 ])
 
 
-val_transform = transforms.Compose([
+val_transform = transforms.Compose([                                                #对测试集的简单处理
     transforms.Resize((256, 256)),  # 缩放到指定大小
-    transforms.CenterCrop(256),
     transforms.ToTensor(),  # 转换为张量
     transforms.Normalize(mean=[0.4848, 0.4435, 0.4023], std=[0.2744, 0.2688, 0.2757]),  # 归一化
 ])
@@ -97,34 +96,34 @@ test_set = torch.utils.data.DataLoader(
 
 
 # 训练
-def train(model1, device, dataset, optimizer1, epoch1):
+def train(model1, device, dataset, optimizer1, epoch1):         #model是神经网络，device为GPU，dataset是训练数据集，optimizer1为优化器，epoch1为训练轮数
     global loss
     model1.train()
 
     correct = 0
     all_len = 0
     # 'tqdm'是一个用于显示进度条的库，它接受任何可迭代对象，并在遍历这个可迭代对象时显示一个进度条。
-    for i, (x, y) in tqdm(enumerate(dataset)):
-        x, y = x.to(device), y.to(device)
-        optimizer1.zero_grad()
-        output = model1(x)
-        pred = output.max(1, keepdim=True)[1]
-        correct += pred.eq(y.view_as(pred)).sum().item()
-        all_len += len(x)
-        loss = nn.CrossEntropyLoss()(output, y)
-        loss.backward()
+    for i, (x, y) in tqdm(enumerate(dataset)):      #i为索引 x为张量图片 y为x对应的标签   这个里我们用0到11的数来代替猫的种类，这在UI界面时会细说
+        x, y = x.to(device), y.to(device)       #转移到GPU
+        optimizer1.zero_grad()                  #梯度清零防止梯度爆炸等其他问题
+        output = model1(x)                      #返回[batch_size, num_classes]
+        pred = output.max(1, keepdim=True)[1]       #1为要查询第二个维度，获取与图片最匹配的类别的索引
+        correct += pred.eq(y.view_as(pred)).sum().item()   #逐元素比较操作，返回一个布尔张量，其中对应位置的元素为True如果预测和真实标签相等，否则为False
+        all_len += len(x)                           #获得数据量以便求出训练真实值
+        loss = nn.CrossEntropyLoss()(output, y)             #交叉熵回归函数计算残以及对图片进行分类
+        loss.backward()                             #反向传播计算梯度
         optimizer1.step()
 
     print(f"第 {epoch1} 次训练的Train真实：{100. * correct / all_len:.2f}%")
 
 # 测试机验证
 def vaild(model, device, dataset):
-    model.eval()
+    model.eval()                            #切换为评估模式
     global loss
     correct = 0
     test_loss = 0
     all_len = 0
-    with torch.no_grad():
+    with torch.no_grad():           #确保在验证过程中不会计算梯度，从而节省内存和计算资源。
         for i, (x, target) in enumerate(dataset):
             x, target = x.to(device), target.to(device)
 
@@ -142,11 +141,11 @@ def vaild(model, device, dataset):
 
 model_1 = torchvision.models.resnet50(pretrained=True)  # weights='ResNet50_Weights.DEFAULT'
 model_1.fc = nn.Sequential(
-    nn.Linear(2048, 12)
+    nn.Linear(2048, 12)                 #修改输出层确保分类为12种
 )
 
 model_1.to(DEVICE)
-optimizer = optim.SGD(model_1.parameters(), lr=LR, momentum=0.09,weight_decay = 3e-4 )
+optimizer = optim.SGD(model_1.parameters(), lr=LR, momentum=0.09,weight_decay = 3e-4 )      #优化器的设置
 
 max_accuracy = 90.0  # 设定保存模型的阈值
 best_model = None
