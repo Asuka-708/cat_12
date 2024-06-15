@@ -1,4 +1,4 @@
-此模型参加百度飞浆的猫12分类新生赛，并通过不断改进达到了96.25%的正确率  
+<img width="1277" alt="2fde0341087b38a239cf74241eab8870_" src="https://github.com/Asuka-708/cat_12/assets/152284289/39fbfc17-08e6-4cba-a9c9-47140bf20fc8">此模型参加百度飞浆的猫12分类新生赛，并通过不断改进达到了96.25%的正确率  
 数据集过大，就不不上传了这是数据集的截图
 ![image](https://github.com/Asuka-708/cat_12/assets/152284289/0821146f-329d-4fbe-81b5-998733cd553b)
 
@@ -57,8 +57,18 @@ UI界面基于gradio库实现的web界面UI界面
   
 使用模型训练中的图形处理方法对图片进行处理  
   
-通过创建的serve_chicken 的函数，接收一张图片和一个整数 shu，然后使用预训练的 ResNet 模型对图片进行预测，识别出图片中猫的种类，并返回前 shu 个最可能的猫品种及其置信度  
+通过创建的serve_chicken 的函数，接收一张图片和一个整数 ，然后使用预训练的 ResNet 模型对图片进行预测，识别出图片中猫的种类，并返回前 shu 个最可能的猫品种及其置信度  
 
 ![屏幕截图 2024-06-04 105946](https://github.com/Asuka-708/cat_12/assets/152284289/e0d022f8-bf07-4eb6-abf3-10a6de788782)    
     
 ![屏幕截图 2024-06-04 105951](https://github.com/Asuka-708/cat_12/assets/152284289/3ebbeed8-dd2d-4916-bf08-ff2bf582420b)    
+
+利用tensorboard实现可视化训练的真实值与损失值以及测试的真实值和损失值
+<img width="1270" alt="ee34da91202c574d90773ab51979e49c_" src="https://github.com/Asuka-708/cat_12/assets/152284289/896f7883-e8f1-4139-905c-c01f2c3e6269">
+
+<img width="1277" alt="2fde0341087b38a239cf74241eab8870_" src="https://github.com/Asuka-708/cat_12/assets/152284289/0ab834da-6d04-41eb-a5e8-639a22872e1d">
+
+
+
+
+
