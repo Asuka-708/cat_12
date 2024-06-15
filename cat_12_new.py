@@ -1,23 +1,24 @@
 import random
+from torch.utils import tensorboard
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 import torchvision
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 
+writer = SummaryWriter()
 
 # 对应超参数
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 LR = 0.005
 EPOCH = 100
 BTACH_SIZE = 32
-train_root = "data/cat_12_train_new"
-
 
 def add_gaussian_noise(x):
     # x 是一个 float 类型的 tensor，可以直接进行浮点数运算
@@ -73,12 +74,12 @@ val_transform = transforms.Compose([                                            
     transforms.Normalize(mean=[0.4848, 0.4435, 0.4023], std=[0.2744, 0.2688, 0.2757]),  # 归一化
 ])
 
-train_d = 'data\cat_12_train_new'
+train_d = 'data\cat_12_train_new_1'
 train_data = ImageFolder(train_d,transform=train_transform)
 
 
 # 使用测试集的样本索引生成验证集valid_data。
-valid_data = 'data\cat_12_val_new'
+valid_data = 'data\cat_12_val_new_1'
 val_dataset = ImageFolder(valid_data,transform=val_transform)
 # 训练数据集加载
 train_set = torch.utils.data.DataLoader(
@@ -113,11 +114,13 @@ def train(model1, device, dataset, optimizer1, epoch1):         #model是神经�
         loss = nn.CrossEntropyLoss()(output, y)             #交叉熵回归函数计算残以及对图片进行分类
         loss.backward()                             #反向传播计算梯度
         optimizer1.step()
+        writer.add_scalar('Train/Loss', loss.item(), i + epoch1 * len(dataset))
+        writer.add_scalar('Train/Accuracy', 100. * correct / all_len, i + epoch1 * len(dataset))
 
     print(f"第 {epoch1} 次训练的Train真实：{100. * correct / all_len:.2f}%")
 
 # 测试机验证
-def vaild(model, device, dataset):
+def vaild(model, device, dataset,epoch1):
     model.eval()                            #切换为评估模式
     global loss
     correct = 0
@@ -133,10 +136,10 @@ def vaild(model, device, dataset):
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
             all_len += len(x)
+    writer.add_scalar('Validation/Loss', test_loss / len(dataset), epoch1)
+    writer.add_scalar('Validation/Accuracy', 100. * correct / all_len, epoch1)
     print(f"Test 真实：{100. * correct / all_len:.2f}%")
     return 100. * correct / all_len
-
-
 
 
 model_1 = torchvision.models.resnet50(pretrained=True)  # weights='ResNet50_Weights.DEFAULT'
@@ -147,16 +150,17 @@ model_1.fc = nn.Sequential(
 model_1.to(DEVICE)
 optimizer = optim.SGD(model_1.parameters(), lr=LR, momentum=0.09,weight_decay = 3e-4 )      #优化器的设置
 
-max_accuracy = 90.0  # 设定保存模型的阈值
+max_accuracy = 90.0  # 设定保存模型的阈值,大于90%才会会保存模型
 best_model = None
 
 for epoch in range(1, EPOCH + 1):
     train(model_1, DEVICE, train_set, optimizer, epoch)
-    accu = vaild(model_1, DEVICE, test_set)
+    accu = vaild(model_1, DEVICE, test_set,epoch)
     if accu > max_accuracy:
         max_accuracy = accu
         best_model = model_1.state_dict()  # 或者使用 torch.save() 保存整个模型
 
+writer.close()
 # 保存最优模型
-torch.save(best_model, r"best_model_train1.pth")
+torch.save(best_model, r"best_model_train2.pth")
 
